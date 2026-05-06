@@ -12,5 +12,16 @@ public class Main {
 
         t1.start();
         t2.start();
+        try {
+            t1.join();  // wait for t1 to finish
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        try {
+            t2.join();  // wait for t2 to finish
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("Final Balance: " + sharedAccount.getBalance());
     }
 }

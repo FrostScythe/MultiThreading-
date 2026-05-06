@@ -2,7 +2,7 @@ public class BankAccount {
 
     private int balance = 1000;
 
-    public void deposit(int amount, String customerName) {
+    public synchronized void deposit(int amount, String customerName) {
 
         System.out.println(customerName +
                 " is depositing " + amount);
@@ -18,21 +18,24 @@ public class BankAccount {
         System.out.println(customerName +
                 " is trying to withdraw " + amount);
 
-        if (balance >= amount) {
+        synchronized(this) {
+            if (balance >= amount) {
 
-            // Artificial delay to increase race condition chance
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                // Artificial delay to increase race condition chance
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                balance = balance - amount;
+
+                System.out.println(customerName +
+                        " withdrew successfully. Balance: " + balance);
+
+            } else {
+
             }
-
-            balance = balance - amount;
-
-            System.out.println(customerName +
-                    " withdrew successfully. Balance: " + balance);
-
-        } else {
 
             System.out.println(customerName +
                     " -> Insufficient funds. Balance: " + balance);
