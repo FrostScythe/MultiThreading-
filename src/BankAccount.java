@@ -1,29 +1,30 @@
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class BankAccount {
 
     private int balance = 1000;
 
     // true = fair lock (FIFO order)
-    private ReentrantLock lock = new ReentrantLock(true);
+    private ReadWriteLock lock = new ReentrantReadWriteLock();
+    private Lock readLock = lock.readLock();
+    private Lock writeLock = lock.writeLock();
 
     public void deposit(int amount, String customerName) {
 
         System.out.println(customerName +
                 " is depositing " + amount);
 
-        lock.lock();
+        writeLock.lock();
 
         try {
-
             balance = balance + amount;
 
-            System.out.println(customerName +
-                    " deposited successfully. Balance: " + balance);
-
+            System.out.println(customerName + " deposited successfully. Balance: " + balance);
         } finally {
 
-            lock.unlock();
+            writeLock.unlock();
         }
     }
 
@@ -32,7 +33,7 @@ public class BankAccount {
         System.out.println(customerName +
                 " is trying to withdraw " + amount);
 
-        lock.lock();
+        writeLock.lock();
 
         try {
 
@@ -58,14 +59,23 @@ public class BankAccount {
 
         } finally {
 
-            lock.unlock();
+            writeLock.unlock();
         }
     }
 
     public void checkBalance(String customerName) {
-
-        System.out.println(customerName +
-                " checked balance: " + balance);
+        readLock.lock();
+        try{
+            // Artificial delay
+            try {
+                Thread.sleep(100);
+                System.out.println(customerName + " checked balance: " + balance);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        } finally {
+            readLock.unlock();
+        }
     }
 
     public int getBalance() {
