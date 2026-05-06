@@ -1,16 +1,30 @@
+import java.util.concurrent.locks.ReentrantLock;
+
 public class BankAccount {
 
     private int balance = 1000;
 
-    public synchronized void deposit(int amount, String customerName) {
+    // true = fair lock (FIFO order)
+    private ReentrantLock lock = new ReentrantLock(true);
+
+    public void deposit(int amount, String customerName) {
 
         System.out.println(customerName +
                 " is depositing " + amount);
 
-        balance = balance + amount;
+        lock.lock();
 
-        System.out.println(customerName +
-                " deposited successfully. Balance: " + balance);
+        try {
+
+            balance = balance + amount;
+
+            System.out.println(customerName +
+                    " deposited successfully. Balance: " + balance);
+
+        } finally {
+
+            lock.unlock();
+        }
     }
 
     public void withdraw(int amount, String customerName) {
@@ -18,10 +32,13 @@ public class BankAccount {
         System.out.println(customerName +
                 " is trying to withdraw " + amount);
 
-        synchronized(this) {
+        lock.lock();
+
+        try {
+
             if (balance >= amount) {
 
-                // Artificial delay to increase race condition chance
+                // Artificial delay
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
@@ -35,10 +52,13 @@ public class BankAccount {
 
             } else {
 
+                System.out.println(customerName +
+                        " -> Insufficient funds. Balance: " + balance);
             }
 
-            System.out.println(customerName +
-                    " -> Insufficient funds. Balance: " + balance);
+        } finally {
+
+            lock.unlock();
         }
     }
 
