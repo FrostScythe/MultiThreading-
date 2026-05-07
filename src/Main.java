@@ -4,10 +4,10 @@ public class Main {
 
         // Two separate accounts
         BankAccount account1 =
-                new BankAccount("Ayush", 1000);
+                new BankAccount("Ayush", 1000,1);
 
         BankAccount account2 =
-                new BankAccount("Rahul", 1000);
+                new BankAccount("Rahul", 1000,2);
 
         // Thread-1
         Thread t1 = new Thread(() -> {

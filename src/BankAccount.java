@@ -2,15 +2,18 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class BankAccount {
 
-    private String accountHolder;
+    private final int id;
+
+    private final String accountHolder;
     private int balance;
 
-    // Each account has its own lock
-    private ReentrantLock lock = new ReentrantLock();
+    //Removing dead lock by using ReentrantLock
+    private final ReentrantLock lock = new ReentrantLock();
 
-    public BankAccount(String accountHolder, int balance) {
+    public BankAccount(String accountHolder, int balance,int id) {
         this.accountHolder = accountHolder;
         this.balance = balance;
+        this.id = id;
     }
 
     // DEADLOCK METHOD
@@ -18,10 +21,13 @@ public class BankAccount {
                          int amount,
                          String threadName) {
 
+        ReentrantLock firstLock  = (this.id < targetAccount.id) ? this.lock : targetAccount.lock;
+        ReentrantLock secondLock = (this.id < targetAccount.id) ? targetAccount.lock : this.lock;
+
         System.out.println(threadName + " trying to lock " + this.accountHolder);
 
         // Lock current account
-        lock.lock();
+        firstLock.lock();
 
         try {
 
@@ -37,7 +43,7 @@ public class BankAccount {
             System.out.println(threadName +" trying to lock " +targetAccount.accountHolder);
 
             // Try locking target account
-            targetAccount.lock.lock();
+            secondLock.lock();
 
             try {
 
@@ -54,13 +60,12 @@ public class BankAccount {
                 }
 
             } finally {
-
-                targetAccount.lock.unlock();
+                secondLock.unlock();
             }
 
         } finally {
 
-            lock.unlock();
+            firstLock.unlock();
         }
     }
 
