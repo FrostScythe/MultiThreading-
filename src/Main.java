@@ -2,26 +2,46 @@ public class Main {
 
     public static void main(String[] args) {
 
-        BankAccount sharedAccount = new BankAccount();
+        // Two separate accounts
+        BankAccount account1 =
+                new BankAccount("Ayush", 1000);
 
-        Customer c1 = new Customer("Ayush", sharedAccount);
-        Customer c2 = new Customer("Rahul", sharedAccount);
+        BankAccount account2 =
+                new BankAccount("Rahul", 1000);
 
-        Thread t1 = new Thread(c1);
-        Thread t2 = new Thread(c2);
+        // Thread-1
+        Thread t1 = new Thread(() -> {
+
+            account1.transfer(
+                    account2,
+                    100,
+                    "Thread-1");
+
+        });
+
+        // Thread-2
+        Thread t2 = new Thread(() -> {
+
+            account2.transfer(
+                    account1,
+                    200,
+                    "Thread-2");
+
+        });
 
         t1.start();
         t2.start();
+
         try {
-            t1.join();  // wait for t1 to finish
+
+            t1.join();
+            t2.join();
+
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+
+            e.printStackTrace();
         }
-        try {
-            t2.join();  // wait for t2 to finish
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println("Final Balance: " + sharedAccount.getBalance());
+
+        System.out.println("Program Finished");
     }
 }

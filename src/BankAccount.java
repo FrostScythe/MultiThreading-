@@ -1,84 +1,71 @@
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class BankAccount {
 
-    private int balance = 1000;
+    private String accountHolder;
+    private int balance;
 
-    // true = fair lock (FIFO order)
-    private ReadWriteLock lock = new ReentrantReadWriteLock();
-    private Lock readLock = lock.readLock();
-    private Lock writeLock = lock.writeLock();
+    // Each account has its own lock
+    private ReentrantLock lock = new ReentrantLock();
 
-    public void deposit(int amount, String customerName) {
-
-        System.out.println(customerName +
-                " is depositing " + amount);
-
-        writeLock.lock();
-
-        try {
-            balance = balance + amount;
-
-            System.out.println(customerName + " deposited successfully. Balance: " + balance);
-        } finally {
-
-            writeLock.unlock();
-        }
+    public BankAccount(String accountHolder, int balance) {
+        this.accountHolder = accountHolder;
+        this.balance = balance;
     }
 
-    public void withdraw(int amount, String customerName) {
+    // DEADLOCK METHOD
+    public void transfer(BankAccount targetAccount,
+                         int amount,
+                         String threadName) {
 
-        System.out.println(customerName +
-                " is trying to withdraw " + amount);
+        System.out.println(threadName + " trying to lock " + this.accountHolder);
 
-        writeLock.lock();
+        // Lock current account
+        lock.lock();
 
         try {
 
-            if (balance >= amount) {
+            System.out.println(threadName +" locked " + this.accountHolder);
 
-                // Artificial delay
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-
-                balance = balance - amount;
-
-                System.out.println(customerName +
-                        " withdrew successfully. Balance: " + balance);
-
-            } else {
-
-                System.out.println(customerName +
-                        " -> Insufficient funds. Balance: " + balance);
-            }
-
-        } finally {
-
-            writeLock.unlock();
-        }
-    }
-
-    public void checkBalance(String customerName) {
-        readLock.lock();
-        try{
             // Artificial delay
             try {
-                Thread.sleep(100);
-                System.out.println(customerName + " checked balance: " + balance);
+                Thread.sleep(1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+
+            System.out.println(threadName +" trying to lock " +targetAccount.accountHolder);
+
+            // Try locking target account
+            targetAccount.lock.lock();
+
+            try {
+
+                System.out.println(threadName +
+                        " locked " +
+                        targetAccount.accountHolder);
+
+                if (balance >= amount) {
+
+                    balance -= amount;
+                    targetAccount.balance += amount;
+
+                    System.out.println(threadName +" transferred " + amount +" from " + this.accountHolder +" to " + targetAccount.accountHolder);
+                }
+
+            } finally {
+
+                targetAccount.lock.unlock();
+            }
+
         } finally {
-            readLock.unlock();
+
+            lock.unlock();
         }
     }
 
-    public int getBalance() {
-        return balance;
+    public void checkBalance() {
+
+        System.out.println(accountHolder +" Balance: " + balance);
     }
 }

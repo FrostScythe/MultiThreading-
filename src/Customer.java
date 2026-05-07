@@ -1,29 +1,25 @@
 public class Customer implements Runnable {
 
     private String name;
-    private BankAccount account;
 
-    // Constructor
-    public Customer(String name, BankAccount account) {
+    private BankAccount fromAccount;
+    private BankAccount toAccount;
+
+    public Customer(String name,
+                    BankAccount fromAccount,
+                    BankAccount toAccount) {
+
         this.name = name;
-        this.account = account;
+        this.fromAccount = fromAccount;
+        this.toAccount = toAccount;
     }
 
     @Override
     public void run() {
 
-        // Multiple withdrawals to create conflict
-        for (int i = 0; i < 3; i++) {
-
-            account.withdraw(700, name);
-
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        account.checkBalance(name);
+        fromAccount.transfer(
+                toAccount,
+                100,
+                name);
     }
 }
