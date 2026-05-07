@@ -4,7 +4,7 @@ public class BankAccount {
 
     private final int id;
 
-    private final String accountHolder;
+    public final String accountHolder;
     private int balance;
 
     //Removing dead lock by using ReentrantLock
@@ -67,6 +67,25 @@ public class BankAccount {
 
             firstLock.unlock();
         }
+    }
+
+    public synchronized void deposit(String customerName, int amount) {
+        balance += amount;
+        System.out.println(customerName + " deposited " + amount + " | Balance: " + balance);
+        notifyAll(); // wake all waiting withdrawal threads
+    }
+
+    public synchronized void withdraw(String customerName, int amount) {
+        while (balance < amount) {
+            System.out.println(customerName + " is WAITING — balance too low: " + balance);
+            try {
+                wait();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        balance -= amount;
+        System.out.println(customerName + " withdrew " + amount + " | Balance: " + balance);
     }
 
     public void checkBalance() {
