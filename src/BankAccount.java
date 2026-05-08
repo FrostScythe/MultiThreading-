@@ -7,9 +7,9 @@ public class BankAccount {
     private int balance = 1000;
 
     // true = fair lock (FIFO order)
-    private ReadWriteLock lock = new ReentrantReadWriteLock();
-    private Lock readLock = lock.readLock();
-    private Lock writeLock = lock.writeLock();
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final Lock readLock = lock.readLock();
+    private final Lock writeLock = lock.writeLock();
 
     public void deposit(int amount, String customerName) {
 
