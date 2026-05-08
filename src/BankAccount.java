@@ -4,7 +4,7 @@ public class BankAccount {
 
     private final int id;
 
-    public final String accountHolder;
+    private final String accountHolder;
     private int balance;
 
     //Removing dead lock by using ReentrantLock
@@ -88,8 +88,7 @@ public class BankAccount {
         System.out.println(customerName + " withdrew " + amount + " | Balance: " + balance);
     }
 
-    public void checkBalance() {
-
-        System.out.println(accountHolder +" Balance: " + balance);
+    public synchronized void checkBalance() {
+        System.out.println(accountHolder + " Balance: " + balance);
     }
 }

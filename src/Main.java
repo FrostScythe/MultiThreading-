@@ -1,65 +1,50 @@
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
 
-        // Two separate accounts
-//        BankAccount account1 =
-//                new BankAccount("Ayush", 1000,1);
-//
-//        BankAccount account2 =
-//                new BankAccount("Rahul", 1000,2);
+        System.out.println("===== PHASE 5: DEADLOCK DEMO =====\n");
 
-        // Thread-1
-//        Thread t1 = new Thread(() -> {
-//
-//            account1.transfer(
-//                    account2,
-//                    100,
-//                    "Thread-1");
-//
-//        });
-//
-//        // Thread-2
-//        Thread t2 = new Thread(() -> {
-//
-//            account2.transfer(
-//                    account1,
-//                    200,
-//                    "Thread-2");
-//
-//        });
+        // Two accounts for transfer (uses ReentrantLock)
+        BankAccount account1 = new BankAccount("Ayush", 1000, 1);
+        BankAccount account2 = new BankAccount("Rahul", 1000, 2);
 
-        BankAccount account =
-                new BankAccount("Ayush", 100,1);
+        Thread t1 = new Thread(() ->
+                account1.transfer(account2, 100, "Thread-1"));
 
-        // withdrawal thread
-        Thread t1 = new Thread(()-> {
-            System.out.println("Trying to withdraw from " + account.accountHolder);
-            account.withdraw("Alice", 500);
-        });
-        // deposit thread
-        Thread t2 = new Thread(()-> {
-            try {
-                Thread.sleep(2000); // Simulate delay in deposit
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            account.deposit("Bob", 500);
-        });
+        Thread t2 = new Thread(() ->
+                account2.transfer(account1, 200, "Thread-2"));
 
         t1.start();
         t2.start();
+        t1.join();
+        t2.join();
 
-        try {
+        System.out.println("\n===== PHASE 6: THREAD COMMUNICATION DEMO =====\n");
 
-            t1.join();
-            t2.join();
+        // One account for wait/notify (uses synchronized)
+        // ⚠️ LEARNING NOTE: Never call transfer() on this account
+        // synchronized and ReentrantLock are separate locks — mixing causes data corruption
+        BankAccount account3 = new BankAccount("Alice", 100, 3);
 
-        } catch (InterruptedException e) {
+        Thread withdrawThread = new Thread(() -> {
+            System.out.println("Trying to withdraw .....");
+            account3.withdraw("Alice", 500);
+        });
 
-            e.printStackTrace();
-        }
+        Thread depositThread = new Thread(() -> {
+            try {
+                Thread.sleep(2000); // simulate delay
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            account3.deposit("Bob", 500);
+        });
 
-        System.out.println("\n Transaction Complete".toUpperCase());
+        withdrawThread.start();
+        depositThread.start();
+        withdrawThread.join();
+        depositThread.join();
+
+        System.out.println("\n===== TRANSACTION COMPLETE =====");
     }
 }
