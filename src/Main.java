@@ -1,27 +1,32 @@
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-import static java.util.concurrent.Executors.newFixedThreadPool;
+import java.util.concurrent.Executors;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException {
 
-        BankAccount account = new BankAccount();
+        System.out.println("Bank system starting...");
 
-        // TODO 1: Create a fixed thread pool with 3 threads
-        ExecutorService pool = newFixedThreadPool(8);
+        // TODO 1: Create a CountDownLatch for 3 components
+        CountDownLatch latch = new CountDownLatch(3);
 
-        // TODO 2: Submit 8 deposit tasks of ₹100 each (customers: "C1" through "C8")
-        // Hint: pool.submit() or pool.execute() — both work for Runnable
-        for (int i = 1; i <= 8; i++) {
-            pool.execute( new DepositTask(account, 100, "C" + i) );
-        }
+        // TODO 2: Create a thread pool with 3 threads
+        ExecutorService pool = Executors.newFixedThreadPool(3);
 
-        // TODO 3: Shut down the pool — no new tasks accepted
+        // TODO 3: Submit 3 loaders — Customer Data (2000ms),
+        //         Transaction History (3000ms), Account Balances (1500ms)
+        pool.execute(new SystemLoader("Customer Data", 100, latch));
+        pool.execute(new SystemLoader("Transaction History", 100, latch));
+        pool.execute(new SystemLoader("Account Balances", 100, latch));
+
+        System.out.println("Main thread waiting for system to load...");
+
+        // TODO 4: Main thread waits here until all 3 countDown() calls happen
+        latch.await();
+
+        // This line should only print after ALL 3 components are loaded
+        System.out.println("\n✅ All systems loaded! Bank is now open for transactions.");
+
         pool.shutdown();
-
-        // TODO 4: Wait for all tasks to finish (blocks until done OR 10 seconds pass)
-        pool.awaitTermination(10, TimeUnit.SECONDS);
-
-        System.out.println("Final Balance: " + account.getBalance());
     }
 }
